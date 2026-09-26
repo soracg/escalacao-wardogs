@@ -1130,7 +1130,7 @@ function atualizarTodosContadores(){
 
 function exportarLog(){
   const mapa     = document.getElementById("mapaInput").value.trim();
-  const ponto    = document.getElementById("pontoInput").value.trim();
+  const torre    = document.getElementById("pontoInput").value.trim();
   const lado     = document.getElementById("ladoInput").value.trim();
   const briefing = document.getElementById("briefingInput").value.trim();
   const hora     = document.getElementById("horaInput").value.trim();
@@ -1142,7 +1142,7 @@ function exportarLog(){
   log += "═══════════════════════════════════════\n";
 
   if(mapa)     log += `🎮 MAPA:      ${mapa}\n`;
-  if(ponto)    log += `📍 PONTO:     ${ponto}\n`;
+  if(torre)    log += `📍 TORRE:     ${torre}\n`;
   if(lado)     log += `⚔️  LADO:      ${lado}\n`;
   if(briefing) log += `🕒 BRIEFING:  ${briefing}H\n`;
   if(hora)     log += `🕒 START:     ${hora}H\n`;
@@ -1196,7 +1196,7 @@ function exportarGIFDiscord(){
   const squads = document.querySelectorAll(".squad");
 
   const mapa     = document.getElementById("mapaInput").value.trim();
-  const ponto    = document.getElementById("pontoInput").value.trim();
+  const torre    = document.getElementById("pontoInput").value.trim();
   const lado     = document.getElementById("ladoInput").value.trim();
   const briefing = document.getElementById("briefingInput").value.trim();
   const hora     = document.getElementById("horaInput").value.trim();
@@ -1208,7 +1208,7 @@ function exportarGIFDiscord(){
   const infoBar = document.createElement("div");
   const partes = [];
   if(mapa)     partes.push(`🎮 ${mapa}`);
-  if(ponto)    partes.push(`📍 ${ponto}`);
+  if(torre)    partes.push(`📍 ${torre}`);
   if(lado)     partes.push(`⚔️ ${lado}`);
   if(briefing) partes.push(`🕒 BRIEFING ${briefing}H`);
   if(hora)     partes.push(`🕒 START ${hora}H`);
@@ -1293,7 +1293,7 @@ function exportarVideo(){
   const squads = document.querySelectorAll(".squad");
 
   const mapa     = document.getElementById("mapaInput").value.trim();
-  const ponto    = document.getElementById("pontoInput").value.trim();
+  const torre    = document.getElementById("pontoInput").value.trim();
   const lado     = document.getElementById("ladoInput").value.trim();
   const briefing = document.getElementById("briefingInput").value.trim();
   const hora     = document.getElementById("horaInput").value.trim();
@@ -1305,7 +1305,7 @@ function exportarVideo(){
   const infoBar = document.createElement("div");
   const partes = [];
   if(mapa)     partes.push(`🎮 ${mapa}`);
-  if(ponto)    partes.push(`📍 ${ponto}`);
+  if(torre)    partes.push(`📍 ${torre}`);
   if(lado)     partes.push(`⚔️ ${lado}`);
   if(briefing) partes.push(`🕒 BRIEFING ${briefing}H`);
   if(hora)     partes.push(`🕒 START ${hora}H`);
@@ -1615,13 +1615,13 @@ function exportarImagem(){
   });
 
   const mapa     = document.getElementById("mapaInput")?.value || "MAPA";
-  const ponto    = document.getElementById("pontoInput")?.value || "PONTO";
+  const torre    = document.getElementById("pontoInput")?.value || "TORRE";
   const lado     = document.getElementById("ladoInput")?.value || "LADO";
   const hora     = document.getElementById("horaInput")?.value || "START JOGO";
   const briefing = document.getElementById("briefingInput")?.value || "BRIEFING";
 
   const info = document.createElement("div");
-  info.innerHTML = `🎮 ${mapa} • 📍 ${ponto} • ⚔️ ${lado} • 🕒 BRIEFING - ${briefing}H • 🕒 START JOGO - ${hora}H`;
+  info.innerHTML = `🎮 ${mapa} • 📍 ${torre} • ⚔️ ${lado} • 🕒 BRIEFING - ${briefing}H • 🕒 START JOGO - ${hora}H`;
   Object.assign(info.style, {
     textAlign: "center", marginBottom: "18px", padding: "10px",
     fontSize: "20px", color: "#c0181c", fontWeight: "bold",
@@ -1780,7 +1780,7 @@ function coletarEscalacao(){
   // info do match
   data._meta = {
     mapa:     document.getElementById("mapaInput").value.trim(),
-    ponto:    document.getElementById("pontoInput").value.trim(),
+    torre:    document.getElementById("pontoInput").value.trim(),
     lado:     document.getElementById("ladoInput").value.trim(),
     briefing: document.getElementById("briefingInput").value.trim(),
     hora:     document.getElementById("horaInput").value.trim(),
@@ -1796,7 +1796,7 @@ function aplicarEscalacao(data){
   // restaura meta
   if(data._meta){
     document.getElementById("mapaInput").value     = data._meta.mapa     || "";
-    document.getElementById("pontoInput").value    = data._meta.ponto    || "";
+    document.getElementById("pontoInput").value    = data._meta.torre    || "";
     document.getElementById("ladoInput").value     = data._meta.lado     || "Eixo";
     document.getElementById("briefingInput").value = data._meta.briefing || "";
     document.getElementById("horaInput").value     = data._meta.hora     || "";
