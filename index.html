@@ -1,0 +1,2505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>WARDOGS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:        #080808;
+  --bg2:       #0f0f0f;
+  --bg3:       #181818;
+  --panel:     #0c0c0c;
+  --card-bg:   #111111;
+  --border:    #2a1a1a;
+  --border2:   #3d1515;
+  --gold:      #c0181c;
+  --gold2:     #e83535;
+  --gold-dim:  #6a0e10;
+  --red:       #8b0000;
+  --green:     #1a3a1a;
+  --text:      #d8d4d0;
+  --text2:     #7a7470;
+  --text3:     #4a4440;
+  --shadow:    rgba(0,0,0,0.8);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background-color: var(--bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  background-image:
+    linear-gradient(rgba(180,20,20,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,20,20,0.03) 1px, transparent 1px),
+    linear-gradient(rgba(180,20,20,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,20,20,0.015) 1px, transparent 1px),
+    radial-gradient(ellipse at center, #1a0808 0%, #050505 100%);
+
+  background-size:
+    20px 20px,
+    20px 20px,
+    100px 100px,
+    100px 100px,
+    100% 100%;
+
+  /* REMOVIDO: animation: flicker */
+  /* REMOVIDO: body::after scanlines animadas */
+}
+
+/* REMOVIDO: body::before textura animada */
+/* REMOVIDO: body::after scanlines com animação scanMove */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+.match-info {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 20px;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 20px var(--shadow), inset 0 1px 0 rgba(180,20,20,0.2);
+}
+
+.snap-guide {
+  position: absolute;
+  background: rgba(180,20,20,0.6);
+  z-index: 9998;
+  pointer-events: none;
+}
+
+.snap-guide.horizontal {
+  height: 2px;
+  width: 100%;
+}
+
+.snap-guide.vertical {
+  width: 2px;
+  height: 100%;
+}
+
+.snap-target {
+  outline: 2px solid rgba(180,20,20,0.6);
+}
+
+.match-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  position: relative;
+  transition: background 0.2s;
+}
+
+.match-box:last-child { border-right: none; }
+.match-box:hover { background: var(--bg3); }
+
+.match-box .label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--gold-dim);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.match-box input,
+.match-box select {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--gold-dim);
+  background: rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+}
+
+.card input,
+.card select{
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.match-box input:focus,
+.match-box select:focus {
+  box-shadow: 
+    inset 0 0 6px rgba(0,0,0,0.9),
+    0 0 10px rgba(180,20,20,0.25);
+}
+
+.match-box select option { background: var(--bg2); }
+
+.container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 0 8px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  /* REMOVIDO: animation: hudPulse */
+}
+
+.squad.spawn {
+  animation: squadSpawn 0.45s cubic-bezier(.2, .8, .2, 1);
+}
+
+.sidebar button {
+  height: 34px;
+}
+
+.card::before, 
+.card::after {
+  opacity: 0.2;
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--gold-dim);
+  border-style: solid;
+}
+.card::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+.card::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+.card h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+  padding: 6px 0 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.card h2::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.card button {
+  width: 100%;
+}
+
+input,
+select {
+  background: rgba(0,0,0,0.5);
+  color: var(--gold);
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  outline: none;
+  transition: all 0.15s;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+}
+
+input::placeholder {
+  color: var(--text3);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--gold);
+  background: rgba(0,0,0,0.8);
+  box-shadow: 
+    inset 0 0 8px rgba(0,0,0,1),
+    0 0 12px rgba(180,20,20,0.35);
+}
+
+button {
+  width: auto;
+  min-width: 120px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  color: var(--gold);
+  background: linear-gradient(180deg, rgba(180,20,20,0.08), rgba(180,20,20,0.03));
+  border: 1px solid var(--gold-dim);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  white-space: nowrap;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover {
+  background: linear-gradient(180deg, rgba(180,20,20,0.18), rgba(180,20,20,0.08));
+  border-color: var(--gold);
+  color: var(--gold2);
+  box-shadow: 0 0 12px rgba(180,20,20,0.15);
+}
+
+button:active { transform: translateY(1px); }
+
+select option { background: var(--bg2); }
+
+.team-summary {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: var(--gold);
+  text-align: center;
+  padding: 10px;
+  background: rgba(180,20,20,0.05);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.pool {
+  display: flex;
+  flex-direction: column;
+  max-height: 380px;
+}
+
+.pool ul {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin-top: 6px;
+}
+
+.pool ul li {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  cursor: grab;
+  transition: color 0.15s, background 0.15s;
+  letter-spacing: 0.5px;
+}
+
+.pool ul li:hover {
+  color: var(--text);
+  background: rgba(180,20,20,0.05);
+}
+
+.lineup-squad { margin-bottom: 8px; }
+
+.lineup-squad h3 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold-dim);
+  margin-bottom: 4px;
+  padding-left: 2px;
+}
+
+.lineup-player {
+  font-size: 12px;
+  color: var(--text2);
+  padding: 4px 8px;
+  margin-bottom: 2px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: grab;
+  transition: all 0.15s;
+}
+
+.lineup-player:hover {
+  color: var(--text);
+  border-color: var(--border2);
+}
+
+#export-area {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 20px;
+  position: relative;
+  /* REMOVIDO: animation: hudPulse */
+  /* REMOVIDO: #export-area::after scanSweep */
+}
+
+/* REMOVIDO: #export-area::after com scanSweep */
+
+.top-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, transparent, rgba(180,20,20,0.08), transparent);
+  border-top: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  position: relative;
+}
+
+.top-banner::before,
+.top-banner::after {
+  content: '◆';
+  font-size: 8px;
+  color: var(--gold-dim);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.top-banner::before { left: 16px; }
+.top-banner::after  { right: 16px; }
+
+.banner-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(180,20,20,0.4));
+}
+
+.banner-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.clan-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 8px;
+  color: var(--gold);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(180,20,20,0.7), 0 0 40px rgba(180,20,20,0.3);
+  text-transform: uppercase;
+}
+
+.clan-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 5px;
+  color: var(--text3);
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: auto auto auto auto auto;
+  gap: 12px;
+  width: 100%;
+}
+
+.card.squad {
+  position: relative;
+  background: linear-gradient(160deg, rgba(22,10,10,0.95), rgba(10,8,8,0.98));
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0;
+  min-height: 180px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  /* REMOVIDO: animation: hudPulse */
+}
+
+.card.squad::before,
+.card.squad::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(180,20,20,0.15);
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 12px rgba(180,20,20,0.08),
+    0 0 6px rgba(180,20,20,0.05);
+}
+
+.card.squad:hover {
+  border-color: var(--gold);
+  box-shadow:
+    0 0 16px rgba(180,20,20,0.35),
+    inset 0 0 12px rgba(180,20,20,0.08);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.squad-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px 10px;
+  background: linear-gradient(180deg, rgba(180,20,20,0.06), transparent);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  gap: 4px;
+}
+
+#export-area img {
+  max-width: none !important;
+  height: auto !important;
+}
+
+.squad-icon {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  flex-shrink: 0;
+  max-width: none;
+}
+
+img {
+  image-rendering: auto;
+  max-width: none !important;
+}
+
+.squad-title { display: none; }
+
+.squad-count {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  background: rgba(0,0,0,0.4);
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+}
+
+.squad ul {
+  list-style: none;
+  padding: 4px;
+  margin: 0;
+  min-height: 80px;
+}
+
+.squad li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 5px 6px;
+  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: rgba(0,0,0,0.25);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  gap: 6px;
+  cursor: grab;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  letter-spacing: 0.3px;
+}
+
+.squad li:hover {
+  background: rgba(180,20,20,0.06);
+  border-color: var(--border);
+  transform: translateX(4px);
+}
+
+.player-search {
+  font-size: 11px !important;
+  padding: 5px 8px !important;
+  margin: 4px !important;
+  width: calc(100% - 8px) !important;
+  background: rgba(0,0,0,0.5) !important;
+  border-color: var(--border) !important;
+  letter-spacing: 0.5px;
+}
+
+.player-list {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin: 0 4px 4px;
+}
+
+.player-list div {
+  font-size: 12px;
+  color: var(--text2);
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.player-list div:hover {
+  color: var(--gold);
+  background: rgba(180,20,20,0.07);
+}
+
+.role {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(180,20,20,0.1);
+  border: 1px solid rgba(180,20,20,0.25);
+  padding: 1px 5px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.role[data-role="Eng"] { color: #4cc3ff; background: rgba(76,195,255,0.08); border-color: rgba(76,195,255,0.2); }
+
+/* ── MARCADOR DE PRESENÇA ── */
+.presence {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border: 1px solid var(--border2);
+  border-radius: 2px;
+  background: rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.presence:hover {
+  border-color: var(--gold-dim);
+}
+
+.presence.presente {
+  background: #2d6e2d;
+  border-color: #4caf50;
+  box-shadow: 0 0 6px rgba(76,175,80,0.5);
+}
+
+.presence.presente::after {
+  content: '✔';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8px;
+  color: #a5d6a7;
+  line-height: 1;
+}
+
+.presence.ausente {
+  background: rgba(139,32,32,0.3);
+  border-color: #8b2020;
+  box-shadow: 0 0 4px rgba(139,32,32,0.4);
+}
+
+.presence.ausente::after {
+  content: '✖';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 7px;
+  color: #ef9a9a;
+  line-height: 1;
+}
+
+.remove {
+  font-size: 10px !important;
+  padding: 2px 5px !important;
+  margin: 0 !important;
+  width: auto !important;
+  min-width: unset !important;
+  background: rgba(139,32,32,0.15) !important;
+  border-color: rgba(139,32,32,0.3) !important;
+  color: #c05050 !important;
+  letter-spacing: 0 !important;
+  flex-shrink: 0;
+}
+
+.remove:hover {
+  background: rgba(139,32,32,0.35) !important;
+  border-color: #8b2020 !important;
+  color: #ff7070 !important;
+  box-shadow: none !important;
+}
+
+.draggable { cursor: grab; }
+.dragging  { opacity: 0.4; }
+
+.squad.drag-over {
+  border-color: var(--gold-dim) !important;
+  background: linear-gradient(160deg, rgba(180,20,20,0.06), rgba(10,8,8,0.98)) !important;
+}
+
+/* MODO PARTIDA */
+.modo-partida .sidebar {
+  opacity: 0.05;
+  pointer-events: none;
+  transition: 0.3s;
+}
+
+.modo-partida .sidebar:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modo-partida .match-info {
+  opacity: 0.2;
+  transition: 0.3s;
+}
+
+.modo-partida .match-info:hover {
+  opacity: 1;
+}
+
+.modo-partida .player-search,
+.modo-partida .player-list,
+.modo-partida input {
+  display: none !important;
+}
+
+.modo-partida button {
+  opacity: 0.6;
+}
+
+.modo-partida button:hover {
+  opacity: 1;
+}
+
+.modo-partida #export-area {
+  box-shadow: 0 0 40px rgba(180,20,20,0.15);
+  border-color: var(--gold-dim);
+}
+
+/* SPAWN — pontual, não contínua, mantida */
+@keyframes squadSpawn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) translateY(-4px);
+    filter: blur(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* EXPORTANDO */
+.exportando .player-search,
+.exportando .player-list,
+.exportando select,
+.exportando button,
+.exportando input { display: none !important; }
+.exportando * {
+  animation: none !important;
+  transition: none !important;
+}
+.exportando *::before,
+.exportando *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.exportando {
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.draggable-squad {
+  position: absolute;
+  top: 150px;
+  left: 150px;
+  cursor: grab;
+  z-index: 50;
+}
+
+.draggable-squad:active { cursor: grabbing; }
+
+/* GRID POSIÇÕES */
+.squad-comando    { grid-column: 3; grid-row: 1; }
+.squad-l1         { grid-column: 2; grid-row: 2; }
+.squad-l2         { grid-column: 3; grid-row: 2; }
+.squad-l3         { grid-column: 4; grid-row: 2; }
+.squad-l4         { grid-column: 5; grid-row: 2; }
+.squad-flex       { grid-column: 2; grid-row: 3; }
+.wamo-card        { grid-column: 3; grid-row: 3; }
+.squad-mg         { grid-column: 4; grid-row: 3; }
+.squad-defesa     { grid-column: 2; grid-row: 4; }
+.artilharia-card  { grid-column: 3; grid-row: 4; }
+.tanque[data-pos="1"]  { grid-column: 2; grid-row: 5; }
+.tanque[data-pos="2"]  { grid-column: 3; grid-row: 5; }
+.tanque[data-pos="3"]  { grid-column: 4; grid-row: 5; }
+.node[data-pos="1"]    { grid-column: 2; grid-row: 6; }
+.node[data-pos="2"]    { grid-column: 3; grid-row: 6; }
+.node[data-pos="3"]    { grid-column: 4; grid-row: 6; }
+.motoristas-card       { grid-column: 5; grid-row: 6; }
+
+.add-squad { max-width: 100%; }
+
+#listaFormacoes { margin-bottom: 6px; }
+
+.exportando .draggable-squad {
+  position: static !important;
+  transform: none !important;
+}
+
+/* REMOVIDO: body::before textura */
+/* REMOVIDO: body::after scanlines animadas */
+/* REMOVIDO: @keyframes scanMove */
+/* REMOVIDO: @keyframes flicker */
+/* REMOVIDO: @keyframes hudPulse */
+/* REMOVIDO: @keyframes scanSweep contínuo */
+/* REMOVIDO: .scan-line::after */
+
+/* Wardogs — vinheta vermelha nas bordas */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  background: radial-gradient(ellipse at center,
+    transparent 55%,
+    rgba(120,0,0,0.25) 100%
+  );
+}
+
+/* Linha vermelha no topo do site */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="match-info">
+  <div class="match-box">
+    <span class="label">MAPA</span>
+    <input id="mapaInput" placeholder="Ex: Bakurani">
+  </div>
+  <div class="match-box">
+    <span class="label">Torre principal</span>
+    <input id="pontoInput" placeholder="Ex: Torre 1">
+  </div>
+  <div class="match-box">
+    <span class="label">LADO</span>
+    <select id="ladoInput">
+      <option>Azul</option>
+      <option>Vermelho</option>
+      <option>Verde</option>
+    </select>
+  </div>
+  <div class="match-box">
+    <span class="label">BRIEFING</span>
+    <input id="briefingInput" placeholder="Ex: 21:00">
+  </div>
+  <div class="match-box">
+    <span class="label">START JOGO</span>
+    <input id="horaInput" placeholder="Ex: 21:00">
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="sidebar">
+
+    <div id="teamSummary" class="team-summary"></div>
+
+    <div class="card pool">
+      <h2>📋 LISTA DE JOGADORES</h2>
+      <input id="newPlayer" placeholder="Nome do jogador">
+      <input id="searchPlayer" placeholder="🔎 Buscar jogador..." oninput="filtrarJogadores()" list="playersList">
+      <datalist id="playersList"></datalist>
+      <button type="button" onclick="addToPool()">Adicionar</button>
+      <button type="button" onclick="modoPartida(this)">🎮 Modo Partida</button>
+      <ul id="pool"></ul>
+    </div>
+
+    <div class="card">
+      <h2>📌 LINEUP FIXO</h2>
+      <div id="lineup"></div>
+    </div>
+
+    <div class="card add-squad">
+      <h2>➕ Nova Coluna</h2>
+      <input type="file" id="squadImageInput" accept="image/*">
+      <input id="newSquadName" placeholder="Ex: QG, NODOS">
+      <button onclick="addSquad()">Criar</button>
+      <button onclick="exportarImagem()">📸 Exportar imagem</button>
+      <button onclick="exportarImagemPro()">🚀 Export PRO</button>
+      <button onclick="exportarVideo()">🎬 Export Vídeo</button>
+      <button onclick="exportarGIFDiscord()">💬 Export GIF Discord</button>
+    </div>
+
+    <div class="card save-form">
+      <h2>💾 Formações</h2>
+      <input id="nomeFormacao" placeholder="Nome da formação">
+      <button onclick="salvarFormacao()">Salvar</button>
+      <button onclick="salvarAoVivo()">📡 Sync ao Vivo</button>
+      <button onclick="exportarLog()">📋 Export LOG</button>
+      <button onclick="carregarBackup()">📥 Carregar Backup Geral</button>
+      <button onclick="exportarFormacoes()">💾 Backup</button>
+      <label style="display:block;width:100%">
+        <span style="display:block;background:#3a0808;color:var(--gold);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;cursor:pointer;font-size:13px;margin-bottom:6px;">
+          📥 Carregar Backup JSON
+        </span>
+        <input type="file" accept=".json" style="display:none" onchange="carregarBackupJSON(this)">
+      </label>
+      <select id="listaFormacoes"></select>
+      <button onclick="carregarFormacao()">Carregar</button>
+      <button onclick="deletarFormacao()">Excluir</button>
+    </div>
+
+  </div>
+
+  <div id="export-area">
+
+    <div class="top-banner">
+      <img src="img/wardogs.png" class="banner-logo">
+      <div class="banner-text">
+        <span class="clan-name">WARDOGS</span>
+        <span class="clan-sub">Escalação</span>
+      </div>
+    </div>
+
+    <div class="board" id="board">
+
+      <div class="card squad squad-comando">
+        <div class="squad-header">
+          <img src="img/comando.png" class="squad-icon">
+          <span class="squad-title">COMANDO</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+      <div class="card squad squad-l1">
+        <div class="squad-header">
+          <img src="img/infantaria.png" class="squad-icon">
+          <span class="squad-title">infantaria</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+      <div class="card squad squad-l2">
+        <div class="squad-header">
+          <img src="img/piloto.png" class="squad-icon">
+          <span class="squad-title">piloto</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+      <div class="card squad squad-l3">
+        <div class="squad-header">
+          <img src="img/logistica.png" class="squad-icon">
+          <span class="squad-title">logistica</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+      <div class="card squad tanque" data-pos="3">
+        <div class="squad-header">
+          <img src="img/engenheiro.png" class="squad-icon">
+          <span class="squad-title">DIV. BLINDADA 3</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+
+      <div class="card squad tanque" data-pos="1">
+        <div class="squad-header">
+          <img src="img/blindado.png" class="squad-icon">
+          <span class="squad-title">DIV. BLINDADA 1</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+      <div class="card squad tanque" data-pos="2">
+        <div class="squad-header">
+          <img src="img/blindado.png" class="squad-icon">
+          <span class="squad-title">DIV. BLINDADA 2</span>
+          <span class="squad-count">0</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = function(type, attrs = {}) {
+  if(type === "2d") attrs.willReadFrequently = true;
+  return originalGetContext.call(this, type, attrs);
+};
+
+const GRID_SIZE = 20;
+const SNAP_DISTANCE = 25;
+let snapLinks = new Map();
+
+let players = [
+  
+];
+
+let usados = new Set();
+
+function refreshSelects(){
+  document.querySelectorAll(".squad").forEach(card => {
+    if(card.querySelector("ul")) return;
+
+    const searchInput = document.createElement("input");
+    searchInput.placeholder = "🔎 Buscar jogador...";
+    searchInput.className = "player-search";
+
+    const list = document.createElement("div");
+    list.className = "player-list";
+    list.style.maxHeight = "120px";
+    list.style.overflowY = "auto";
+    list.style.marginBottom = "6px";
+
+    const ul = document.createElement("ul");
+
+    let dropTarget = null;
+
+    ul.addEventListener("dragover", e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const afterEl = getDragAfterElement(ul, e.clientY);
+      dropTarget = afterEl;
+
+      ul.querySelectorAll("li").forEach(li => li.style.borderTop = "");
+      ul.querySelectorAll("li").forEach(li => li.style.borderBottom = "");
+
+      if (afterEl) {
+        afterEl.style.borderTop = "2px solid var(--gold)";
+      } else {
+        const last = ul.querySelector("li:last-child");
+        if (last) last.style.borderBottom = "2px solid var(--gold)";
+      }
+    });
+
+    ul.addEventListener("dragleave", e => {
+      ul.querySelectorAll("li").forEach(li => {
+        li.style.borderTop = "";
+        li.style.borderBottom = "";
+      });
+      dropTarget = null;
+    });
+
+    ul.addEventListener("drop", e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      ul.querySelectorAll("li").forEach(li => {
+        li.style.borderTop = "";
+        li.style.borderBottom = "";
+      });
+
+      const name = e.dataTransfer.getData("text/plain");
+      if (!name) return;
+
+      const liExistente = ul.querySelector(`li[data-player="${name}"]`);
+
+      if (liExistente) {
+        if (dropTarget && dropTarget !== liExistente) {
+          ul.insertBefore(liExistente, dropTarget);
+        } else if (!dropTarget) {
+          ul.appendChild(liExistente);
+        }
+      } else {
+        const jaEscalado = document.querySelector(`li[data-player="${name}"]`);
+        if (jaEscalado) {
+          alert(`⚠️ ${name} já está escalado em outra squad!`);
+          dropTarget = null;
+          return;
+        }
+
+        document.querySelectorAll("li").forEach(li => {
+          if (li.dataset.player === name) li.remove();
+        });
+        escolherFuncao(card, name, dropTarget);
+        atualizarTodosContadores();
+      }
+
+      dropTarget = null;
+      atualizarResumo();
+      card.dataset.ready = "true";
+    });
+
+    searchInput.addEventListener("input", () => {
+      const termo = searchInput.value.toLowerCase().trim();
+      list.innerHTML = "";
+      if(!termo) return;
+
+      const filtrados = players.filter(p => p.toLowerCase().includes(termo));
+
+      filtrados.forEach(p => {
+        const item = document.createElement("div");
+        item.textContent = p;
+        item.style.cursor = "pointer";
+        item.style.padding = "4px";
+
+        item.onclick = () => {
+          escolherFuncao(card, p);
+          list.innerHTML = "";
+          searchInput.value = "";
+        };
+
+        list.appendChild(item);
+      });
+    });
+
+    card.addEventListener("dragover", e => {
+      e.preventDefault();
+      card.classList.add("drag-over");
+    });
+
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("drag-over");
+    });
+
+    if(!card.querySelector(".player-search")){
+      card.appendChild(searchInput);
+      card.appendChild(list);
+      card.appendChild(ul);
+    }
+  });
+}
+
+function atualizarTodosContadores(){
+  document.querySelectorAll(".squad").forEach(card => {
+    const ul = card.querySelector("ul");
+
+    if(!ul){
+      const contador = card.querySelector(".squad-count");
+      if(contador) contador.innerText = "0";
+      return;
+    }
+
+    const total = [...ul.children].filter(li => li.dataset.player).length;
+    const contador = card.querySelector(".squad-count");
+    if(contador) contador.innerText = total;
+  });
+}
+
+function exportarLog(){
+  const mapa     = document.getElementById("mapaInput").value.trim();
+  const ponto    = document.getElementById("pontoInput").value.trim();
+  const lado     = document.getElementById("ladoInput").value.trim();
+  const briefing = document.getElementById("briefingInput").value.trim();
+  const hora     = document.getElementById("horaInput").value.trim();
+
+  let log = "";
+  log += "═══════════════════════════════════════\n";
+  log += "        WARDOGS — HELL LET LOOSE\n";
+  log += "        ORDEM DE BATALHA\n";
+  log += "═══════════════════════════════════════\n";
+
+  if(mapa)     log += `🎮 MAPA:      ${mapa}\n`;
+  if(ponto)    log += `📍 PONTO:     ${ponto}\n`;
+  if(lado)     log += `⚔️  LADO:      ${lado}\n`;
+  if(briefing) log += `🕒 BRIEFING:  ${briefing}H\n`;
+  if(hora)     log += `🕒 START:     ${hora}H\n`;
+  log += "───────────────────────────────────────\n\n";
+
+  let totalEscalados = 0;
+
+  document.querySelectorAll(".squad").forEach(card => {
+    const ul = card.querySelector("ul");
+    if(!ul) return;
+
+    const jogadores = [...ul.querySelectorAll("li[data-player]")];
+    if(jogadores.length === 0) return;
+
+    const titulo =
+      card.querySelector(".squad-title")?.innerText?.trim() ||
+      card.querySelector("h2")?.innerText?.trim() ||
+      "SQUAD";
+
+    const isNode = card.classList.contains("node");
+
+    log += `┌─ ${titulo.toUpperCase()} `;
+    log += `(${jogadores.length} jogador${jogadores.length > 1 ? "es" : ""})\n`;
+
+    jogadores.forEach((li, idx) => {
+      const name = li.dataset.player || "?";
+      const role = li.querySelector(".role")?.innerText?.trim() || "—";
+      const prefixo = idx === jogadores.length - 1 ? "└──" : "├──";
+      log += `${prefixo} [${role.padEnd(10)}] ${name}\n`;
+    });
+
+    log += "\n";
+    if(!isNode) totalEscalados += jogadores.length;
+  });
+
+  log += "═══════════════════════════════════════\n";
+  log += `👥 TOTAL ESCALADOS: ${totalEscalados} jogadores\n`;
+  log += "═══════════════════════════════════════\n";
+
+  const blob = new Blob([log], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `WD_LOG_${mapa || "PARTIDA"}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportarGIFDiscord(){
+  const area = document.getElementById("export-area");
+  const squads = document.querySelectorAll(".squad");
+
+  const mapa     = document.getElementById("mapaInput").value.trim();
+  const ponto    = document.getElementById("pontoInput").value.trim();
+  const lado     = document.getElementById("ladoInput").value.trim();
+  const briefing = document.getElementById("briefingInput").value.trim();
+  const hora     = document.getElementById("horaInput").value.trim();
+
+  squads.forEach(card => {
+    if(card.querySelectorAll("li").length === 0) card.style.display = "none";
+  });
+
+  const infoBar = document.createElement("div");
+  const partes = [];
+  if(mapa)     partes.push(`🎮 ${mapa}`);
+  if(ponto)    partes.push(`📍 ${ponto}`);
+  if(lado)     partes.push(`⚔️ ${lado}`);
+  if(briefing) partes.push(`🕒 BRIEFING ${briefing}H`);
+  if(hora)     partes.push(`🕒 START ${hora}H`);
+  infoBar.innerHTML = partes.length > 0 ? partes.join("  •  ") : "WARDOGS — HELL LET LOOSE";
+
+  Object.assign(infoBar.style, {
+    textAlign: "center", padding: "10px 20px", marginBottom: "16px",
+    fontSize: "14px", color: "#c0181c", fontWeight: "bold",
+    letterSpacing: "3px", border: "1px solid rgba(201,168,79,0.35)",
+    borderRadius: "3px", background: "rgba(0,0,0,0.5)",
+    textTransform: "uppercase", fontFamily: "'Oswald', sans-serif", display: "block"
+  });
+
+  area.insertBefore(infoBar, area.firstChild);
+  document.body.classList.add("exportando");
+
+  setTimeout(() => {
+    html2canvas(area, {
+      backgroundColor: "#080808", scale: 1.5, useCORS: true, scrollX: 0, scrollY: 0
+    }).then(snapshot => {
+      infoBar.remove();
+      document.body.classList.remove("exportando");
+      squads.forEach(card => card.style.display = "");
+
+      const gif = new GIF({
+        workers: 4, quality: 2,
+        width: snapshot.width, height: snapshot.height,
+        dither: "FloydSteinberg", workerScript: "/gif.worker.js"
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = snapshot.width;
+      canvas.height = snapshot.height;
+      const ctx = canvas.getContext("2d");
+      const totalFrames = 24;
+
+      for(let i = 0; i < totalFrames; i++){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(snapshot, 0, 0);
+
+        const scanY = (canvas.height / totalFrames) * i;
+        const grad = ctx.createLinearGradient(0, scanY - 40, 0, scanY + 40);
+        grad.addColorStop(0,   "rgba(180,20,20,0)");
+        grad.addColorStop(0.5, "rgba(180,20,20,0.12)");
+        grad.addColorStop(1,   "rgba(180,20,20,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "rgba(180,20,20,0.25)";
+        ctx.fillRect(0, scanY - 1, canvas.width, 2);
+
+        const vin = ctx.createRadialGradient(
+          canvas.width/2, canvas.height/2, canvas.height * 0.25,
+          canvas.width/2, canvas.height/2, canvas.height * 0.9
+        );
+        vin.addColorStop(0, "rgba(0,0,0,0)");
+        vin.addColorStop(1, "rgba(0,0,0,0.4)");
+        ctx.fillStyle = vin;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        gif.addFrame(ctx, { delay: 60, copy: true });
+      }
+
+      gif.on("finished", blob => {
+        const mb = (blob.size / 1024 / 1024).toFixed(2);
+        if(blob.size > 8 * 1024 * 1024) alert(`⚠️ GIF com ${mb}MB — Discord aceita até 8MB.`);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "WD_escalacao.gif";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      gif.render();
+    });
+  }, 150);
+}
+
+function exportarVideo(){
+  const area = document.getElementById("export-area");
+  const squads = document.querySelectorAll(".squad");
+
+  const mapa     = document.getElementById("mapaInput").value.trim();
+  const ponto    = document.getElementById("pontoInput").value.trim();
+  const lado     = document.getElementById("ladoInput").value.trim();
+  const briefing = document.getElementById("briefingInput").value.trim();
+  const hora     = document.getElementById("horaInput").value.trim();
+
+  squads.forEach(card => {
+    if(card.querySelectorAll("li").length === 0) card.style.display = "none";
+  });
+
+  const infoBar = document.createElement("div");
+  const partes = [];
+  if(mapa)     partes.push(`🎮 ${mapa}`);
+  if(ponto)    partes.push(`📍 ${ponto}`);
+  if(lado)     partes.push(`⚔️ ${lado}`);
+  if(briefing) partes.push(`🕒 BRIEFING ${briefing}H`);
+  if(hora)     partes.push(`🕒 START ${hora}H`);
+  infoBar.innerHTML = partes.length > 0 ? partes.join("  •  ") : "WARDOGS — HELL LET LOOSE";
+  Object.assign(infoBar.style, {
+    textAlign: "center", padding: "10px 20px", marginBottom: "16px",
+    fontSize: "14px", color: "#c0181c", fontWeight: "bold",
+    letterSpacing: "3px", border: "1px solid rgba(201,168,79,0.35)",
+    borderRadius: "3px", background: "rgba(0,0,0,0.5)",
+    textTransform: "uppercase", fontFamily: "'Oswald', sans-serif", display: "block"
+  });
+
+  area.insertBefore(infoBar, area.firstChild);
+  document.body.classList.add("exportando");
+
+  html2canvas(area, {
+    backgroundColor: "#080808", scale: 2, useCORS: true, scrollX: 0, scrollY: 0
+  }).then(snapshot => {
+    infoBar.remove();
+    document.body.classList.remove("exportando");
+    squads.forEach(card => card.style.display = "");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = snapshot.width;
+    canvas.height = snapshot.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    const stream = canvas.captureStream(30);
+    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+      ? "video/webm;codecs=vp9" : "video/webm";
+
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "WD_escalacao.webm";
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    const duracao = 5000;
+    let start = null;
+    recorder.start();
+
+    function frame(ts){
+      if(!start) start = ts;
+      const elapsed = ts - start;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(snapshot, 0, 0);
+
+      const scanY = (elapsed * 0.25) % canvas.height;
+      const grad = ctx.createLinearGradient(0, scanY - 60, 0, scanY + 60);
+      grad.addColorStop(0,   "rgba(180,20,20,0)");
+      grad.addColorStop(0.5, "rgba(180,20,20,0.10)");
+      grad.addColorStop(1,   "rgba(180,20,20,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(180,20,20,0.3)";
+      ctx.fillRect(0, scanY - 1, canvas.width, 2);
+
+      const pulse = Math.sin(elapsed / 600) * 0.5 + 0.5;
+      ctx.strokeStyle = `rgba(180,20,20,${0.08 + pulse * 0.12})`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+
+      const vin = ctx.createRadialGradient(
+        canvas.width/2, canvas.height/2, canvas.height * 0.2,
+        canvas.width/2, canvas.height/2, canvas.height * 0.95
+      );
+      vin.addColorStop(0, "rgba(0,0,0,0)");
+      vin.addColorStop(1, "rgba(0,0,0,0.45)");
+      ctx.fillStyle = vin;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if(elapsed < duracao) requestAnimationFrame(frame);
+      else recorder.stop();
+    }
+
+    requestAnimationFrame(frame);
+  });
+}
+
+function exportarFormacoes(){
+  const dados = {};
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key.startsWith("formacao_")) dados[key] = localStorage.getItem(key);
+  }
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "WD_backup_formacoes.json";
+  link.click();
+}
+
+function criarMarcadorPresenca(){
+  const marker = document.createElement("span");
+  marker.className = "presence";
+  marker.title = "Clique para marcar presença";
+  marker.addEventListener("click", e => {
+    e.stopPropagation();
+    if(marker.classList.contains("presente")){
+      marker.classList.remove("presente");
+      marker.classList.add("ausente");
+      marker.title = "Ausente";
+    } else if(marker.classList.contains("ausente")){
+      marker.classList.remove("ausente");
+      marker.title = "Clique para marcar presença";
+    } else {
+      marker.classList.add("presente");
+      marker.title = "Presente";
+    }
+  });
+  return marker;
+}
+
+function addPlayerDireto(card, name, role){
+  const ul = card.querySelector("ul");
+  if([...ul.children].some(li => li.dataset.player === name)) return;
+
+  const li = document.createElement("li");
+  li.dataset.player = name;
+  li.draggable = true;
+  li.style.flexDirection = "row";
+  li.style.alignItems = "center";
+
+  li.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("text/plain", li.dataset.player);
+    li.classList.add("dragging");
+  });
+  li.addEventListener("dragend", () => { li.classList.remove("dragging"); });
+
+  const nameWrapper = document.createElement("span");
+  nameWrapper.style.display = "flex";
+  nameWrapper.style.alignItems = "center";
+  nameWrapper.style.gap = "6px";
+  nameWrapper.style.flex = "1";
+
+  const span = document.createElement("span");
+  span.textContent = name;
+
+  const roleEl = document.createElement("span");
+  roleEl.className = "role";
+  roleEl.setAttribute("data-role", role);
+  roleEl.textContent = role;
+
+  nameWrapper.appendChild(span);
+  nameWrapper.appendChild(criarMarcadorPresenca());
+  nameWrapper.appendChild(roleEl);
+
+  const controls = document.createElement("span");
+  controls.style.display = "flex";
+  controls.style.alignItems = "center";
+  controls.style.flexShrink = "0";
+
+  const btn = document.createElement("button");
+  btn.className = "remove";
+  btn.textContent = "✖";
+  btn.onclick = () => removerDoSquad(btn, name);
+
+  controls.appendChild(btn);
+
+  li.appendChild(nameWrapper);
+  li.appendChild(controls);
+  ul.appendChild(li);
+  usados.add(name);
+}
+
+function movePlayer(name, targetUl, beforeEl = null){
+  const el = document.querySelector(`li[data-player="${name}"]`);
+  if(!el) return;
+  if(beforeEl) targetUl.insertBefore(el, beforeEl);
+  else targetUl.appendChild(el);
+}
+
+function modoPartida(btn){
+  document.body.classList.toggle("modo-partida");
+  btn.textContent = document.body.classList.contains("modo-partida") ? "❌ Sair do Modo" : "🎮 Modo Partida";
+}
+
+function atualizarResumo(){
+  let total = 0;
+  document.querySelectorAll(".squad li").forEach(li => {
+    if(!li.dataset.player) return;
+    const card = li.closest(".squad");
+    if(card && (card.classList.contains("node"))) return;
+    total++;
+  });
+  document.getElementById("teamSummary").innerHTML = `👥 ${total} jogadores escalados`;
+}
+
+function atualizarContador(card){
+  const ul = card.querySelector("ul");
+  const total = ul ? ul.querySelectorAll("li[data-player]").length : 0;
+  const contador = card.querySelector(".squad-count");
+  if(contador) contador.innerText = `${total}`;
+}
+
+function observarSquads(){
+  const observer = new MutationObserver(() => { atualizarTodosContadores(); });
+  document.querySelectorAll(".squad").forEach(card => {
+    const ul = card.querySelector("ul");
+    if(!ul) return;
+    observer.observe(ul, { childList: true, subtree: false });
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const elements = [...container.querySelectorAll("li")];
+  let afterElement = null;
+  let closestDistance = Infinity;
+
+  for (const child of elements) {
+    const box = child.getBoundingClientRect();
+    const childCenter = box.top + box.height / 2;
+    const distance = y - childCenter;
+    if (distance < 0 && Math.abs(distance) < closestDistance) {
+      closestDistance = Math.abs(distance);
+      afterElement = child;
+    }
+  }
+  return afterElement;
+}
+
+function addToPool(){
+  const input = document.getElementById("newPlayer");
+  const name = input.value.trim();
+  if(!name) return;
+  if(players.includes(name)) return;
+  players.push(name);
+  input.value = "";
+  atualizarPool();
+  refreshSelects();
+}
+
+function addToSquad(card, name, role){
+  if(!name || !role) return;
+  const ul = card.querySelector("ul");
+  if([...ul.children].some(li => li.dataset.player === name)) return;
+
+  const li = document.createElement("li");
+  li.dataset.player = name;
+  li.draggable = true;
+
+  li.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("text/plain", name);
+    li.classList.add("dragging");
+  });
+  li.addEventListener("dragend", () => { li.classList.remove("dragging"); });
+
+  const nameWrapper = document.createElement("span");
+  nameWrapper.style.display = "flex";
+  nameWrapper.style.alignItems = "center";
+  nameWrapper.style.gap = "6px";
+  nameWrapper.style.flex = "1";
+
+  const nameSpan = document.createElement("span");
+  nameSpan.textContent = name;
+
+  const roleEl = document.createElement("span");
+  roleEl.className = "role";
+  roleEl.setAttribute("data-role", role);
+  roleEl.textContent = role;
+
+  nameWrapper.appendChild(nameSpan);
+  nameWrapper.appendChild(criarMarcadorPresenca());
+  nameWrapper.appendChild(roleEl);
+
+  const btnRemove = document.createElement("button");
+  btnRemove.className = "remove";
+  btnRemove.textContent = "✖";
+  btnRemove.onclick = () => removerDoSquad(btnRemove, name);
+
+  li.appendChild(nameWrapper);
+  li.appendChild(btnRemove);
+
+  ul.appendChild(li);
+  usados.add(name);
+  atualizarPool();
+  atualizarResumo();
+  atualizarTodosContadores();
+}
+
+function exportarImagem(){
+  const area = document.getElementById("export-area");
+  const squads = document.querySelectorAll(".squad");
+
+  squads.forEach(card => {
+    const hasPlayers = card.querySelectorAll("li").length > 0;
+    if (!hasPlayers) card.style.display = "none";
+  });
+
+  const areaRect = area.getBoundingClientRect();
+  const draggaveis = [...document.querySelectorAll(".draggable-squad")];
+  const posicoesSalvas = draggaveis.map(el => ({ left: el.style.left, top: el.style.top }));
+  draggaveis.forEach(el => {
+    const elRect = el.getBoundingClientRect();
+    el.style.left = (elRect.left - areaRect.left) + "px";
+    el.style.top  = (elRect.top  - areaRect.top)  + "px";
+  });
+
+  const mapa     = document.getElementById("mapaInput")?.value || "MAPA";
+  const ponto    = document.getElementById("pontoInput")?.value || "PONTO";
+  const lado     = document.getElementById("ladoInput")?.value || "LADO";
+  const hora     = document.getElementById("horaInput")?.value || "START JOGO";
+  const briefing = document.getElementById("briefingInput")?.value || "BRIEFING";
+
+  const info = document.createElement("div");
+  info.innerHTML = `🎮 ${mapa} • 📍 ${ponto} • ⚔️ ${lado} • 🕒 BRIEFING - ${briefing}H • 🕒 START JOGO - ${hora}H`;
+  Object.assign(info.style, {
+    textAlign: "center", marginBottom: "18px", padding: "10px",
+    fontSize: "20px", color: "#c0181c", fontWeight: "bold",
+    letterSpacing: "3px", border: "1px solid rgba(201,168,79,0.4)",
+    borderRadius: "8px", background: "rgba(0,0,0,0.4)", textTransform: "uppercase"
+  });
+
+  area.insertBefore(info, area.firstChild);
+  document.body.classList.add("exportando");
+
+  const width  = area.scrollWidth;
+  const height = area.scrollHeight;
+  const originalBg = area.style.background;
+  area.style.background = "#120a0a";
+  area.style.backgroundColor = "#120a0a";
+
+  html2canvas(area, {
+    backgroundColor: "#120a0a", scale: 2, useCORS: true,
+    scrollX: 0, scrollY: 0, windowWidth: width, windowHeight: height
+  }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "WD_ordem_de_batalha.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }).finally(() => {
+    info.remove();
+    document.body.classList.remove("exportando");
+    area.style.background = originalBg;
+    squads.forEach(card => card.style.display = "");
+    draggaveis.forEach((el, i) => {
+      el.style.left = posicoesSalvas[i].left;
+      el.style.top  = posicoesSalvas[i].top;
+    });
+  });
+}
+
+function exportarImagemPro(){
+  const area = document.getElementById("export-area");
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "fixed";
+  wrapper.style.left = "0";
+  wrapper.style.top = "0";
+  wrapper.style.zIndex = "-1";
+  wrapper.style.background = "#120a0a";
+
+  const clone = area.cloneNode(true);
+  clone.querySelectorAll(".squad").forEach(card => {
+    const hasPlayers = card.querySelectorAll("li").length > 0;
+    if (!hasPlayers) card.remove();
+  });
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  wrapper.querySelectorAll("input, button, select").forEach(e => e.remove());
+  wrapper.querySelectorAll(".squad-icon").forEach(img => {
+    img.style.width = "120px";
+    img.style.height = "120px";
+    img.style.objectFit = "contain";
+    img.style.display = "block";
+    img.style.margin = "0 auto";
+    img.style.flexShrink = "0";
+  });
+
+  clone.style.width = "max-content";
+  clone.querySelector(".top-banner").style.margin = "0 auto 20px auto";
+  clone.querySelector(".top-banner").style.justifyContent = "center";
+  clone.querySelector(".top-banner").style.width = "100%";
+  clone.style.width = wrapper.scrollWidth + "px";
+  clone.style.height = wrapper.scrollHeight + "px";
+
+  requestAnimationFrame(() => {
+    wrapper.querySelectorAll("*").forEach(el => { el.style.boxSizing = "border-box"; });
+
+    html2canvas(wrapper, {
+      backgroundColor: "#120a0a", scale: 2, useCORS: true,
+      scrollX: 0, scrollY: 0,
+      windowWidth: wrapper.scrollWidth, windowHeight: wrapper.scrollHeight
+    }).then(canvas => {
+      const link = document.createElement("a");
+      link.download = "WD_ORDENACAO_PRO.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      wrapper.remove();
+    });
+  });
+}
+
+function atualizarAutoComplete(){
+  const datalist = document.getElementById("playersList");
+  datalist.innerHTML = "";
+  players.forEach(p => {
+    const option = document.createElement("option");
+    option.value = p;
+    datalist.appendChild(option);
+  });
+}
+
+function restaurarBackup(){
+  // Firebase é a fonte principal — localStorage só como fallback offline
+  const backup = localStorage.getItem("backup_geral");
+  if(!backup) return;
+  const dados = JSON.parse(backup);
+  Object.keys(dados).forEach(key => {
+    if(!localStorage.getItem(key)) localStorage.setItem(key, dados[key]);
+  });
+}
+
+function carregarBackup(){
+  const backup = localStorage.getItem("backup_geral");
+  if(!backup){ alert("Nenhum backup local encontrado"); return; }
+
+  const dados = JSON.parse(backup);
+  document.querySelectorAll(".squad ul").forEach(ul => ul.innerHTML = "");
+  usados.clear();
+
+  const cards = [...document.querySelectorAll(".squad")];
+
+  Object.keys(dados).forEach(key => {
+    const formacao = JSON.parse(dados[key]);
+    formacao.forEach(squadData => {
+      const nomeSquad = squadData.titulo.trim();
+      const card = cards.find(c => {
+        const title = c.querySelector(".squad-title")?.innerText?.trim() || c.querySelector("h2")?.innerText?.trim();
+        return title === nomeSquad;
+      });
+      if(!card) return;
+      squadData.jogadores.forEach(j => { if(!j?.name) return; addPlayerDireto(card, j.name, j.role || ""); });
+      atualizarTodosContadores();
+    });
+  });
+
+  atualizarPool();
+  atualizarResumo();
+  refreshSelects();
+  alert("Backup local carregado!");
+}
+
+// ── FIREBASE FUNCTIONS ──────────────────────────────────────
+
+function coletarEscalacao(){
+  const data = [];
+  document.querySelectorAll(".squad").forEach(card => {
+    const titulo = card.querySelector(".squad-title")?.innerText?.trim()
+      || card.querySelector("h2")?.innerText?.trim()
+      || "Sem nome";
+    const jogadores = [];
+    card.querySelectorAll("li[data-player]").forEach(li => {
+      jogadores.push({
+        name: li.dataset.player,
+        role: li.querySelector(".role")?.innerText?.trim() || ""
+      });
+    });
+    data.push({ titulo, jogadores });
+  });
+
+  // info do match
+  data._meta = {
+    mapa:     document.getElementById("mapaInput").value.trim(),
+    ponto:    document.getElementById("pontoInput").value.trim(),
+    lado:     document.getElementById("ladoInput").value.trim(),
+    briefing: document.getElementById("briefingInput").value.trim(),
+    hora:     document.getElementById("horaInput").value.trim(),
+  };
+
+  return data;
+}
+
+function aplicarEscalacao(data){
+  document.querySelectorAll(".squad ul").forEach(ul => ul.innerHTML = "");
+  usados.clear();
+
+  // restaura meta
+  if(data._meta){
+    document.getElementById("mapaInput").value     = data._meta.mapa     || "";
+    document.getElementById("pontoInput").value    = data._meta.ponto    || "";
+    document.getElementById("ladoInput").value     = data._meta.lado     || "Eixo";
+    document.getElementById("briefingInput").value = data._meta.briefing || "";
+    document.getElementById("horaInput").value     = data._meta.hora     || "";
+  }
+
+  const cards = [...document.querySelectorAll(".squad")];
+
+  data.forEach(squadData => {
+    if(!squadData.titulo) return;
+    const card = cards.find(c =>
+      (c.querySelector(".squad-title")?.innerText?.trim() ||
+       c.querySelector("h2")?.innerText?.trim()) === squadData.titulo
+    );
+    if(!card || !squadData.jogadores) return;
+    squadData.jogadores.forEach(j => {
+      if(!j?.name) return;
+      addPlayerDireto(card, j.name, j.role || "");
+    });
+  });
+
+  atualizarPool();
+  atualizarResumo();
+  atualizarTodosContadores();
+  refreshSelects();
+}
+
+function salvarFormacao(){
+  const nome = document.getElementById("nomeFormacao").value.trim();
+  if(!nome) return alert("Coloca um nome pra formação");
+
+  const data = coletarEscalacao();
+
+  // salva no Firebase
+  firebase.database().ref("formacoes/" + nome).set(data)
+    .then(() => {
+      // backup local também
+      localStorage.setItem("formacao_" + nome, JSON.stringify(data));
+      backupAutomatico();
+      atualizarListaFormacoes();
+      mostrarToast("✅ Formação salva na nuvem!");
+    })
+    .catch(err => {
+      // fallback local
+      localStorage.setItem("formacao_" + nome, JSON.stringify(data));
+      backupAutomatico();
+      atualizarListaFormacoes();
+      mostrarToast("⚠️ Salvo localmente (offline)");
+      console.warn("Firebase erro:", err);
+    });
+}
+
+function backupAutomatico(){
+  const dados = {};
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key.startsWith("formacao_")) dados[key] = localStorage.getItem(key);
+  }
+  localStorage.setItem("backup_geral", JSON.stringify(dados));
+}
+
+function atualizarListaFormacoes(){
+  firebase.database().ref("formacoes").once("value")
+    .then(snapshot => {
+      const select = document.getElementById("listaFormacoes");
+      select.innerHTML = "";
+      const dados = snapshot.val() || {};
+      Object.keys(dados).forEach(nome => {
+        const opt = document.createElement("option");
+        opt.value = nome;
+        opt.textContent = nome;
+        select.appendChild(opt);
+      });
+    })
+    .catch(() => {
+      // fallback localStorage
+      const select = document.getElementById("listaFormacoes");
+      select.innerHTML = "";
+      Object.keys(localStorage).forEach(key => {
+        if(key.startsWith("formacao_")){
+          const nome = key.replace("formacao_", "");
+          const opt = document.createElement("option");
+          opt.value = nome;
+          opt.textContent = nome + " (local)";
+          select.appendChild(opt);
+        }
+      });
+    });
+}
+
+function carregarFormacao(){
+  const nome = document.getElementById("listaFormacoes").value;
+  if(!nome) return;
+
+  firebase.database().ref("formacoes/" + nome).once("value")
+    .then(snapshot => {
+      const data = snapshot.val();
+      if(!data){ alert("Formação não encontrada no Firebase."); return; }
+      aplicarEscalacao(Array.isArray(data) ? data : Object.values(data));
+      mostrarToast("✅ Formação carregada!");
+    })
+    .catch(() => {
+      // fallback localStorage
+      const raw = localStorage.getItem("formacao_" + nome);
+      if(!raw){ alert("Formação não encontrada."); return; }
+      aplicarEscalacao(JSON.parse(raw));
+      mostrarToast("⚠️ Carregado localmente (offline)");
+    });
+}
+
+function deletarFormacao(){
+  const nome = document.getElementById("listaFormacoes").value;
+  if(!nome) return;
+  if(!confirm(`Excluir a formação "${nome}" da nuvem?`)) return;
+
+  firebase.database().ref("formacoes/" + nome).remove()
+    .then(() => {
+      localStorage.removeItem("formacao_" + nome);
+      atualizarListaFormacoes();
+      mostrarToast("🗑️ Formação excluída!");
+    })
+    .catch(err => {
+      localStorage.removeItem("formacao_" + nome);
+      atualizarListaFormacoes();
+      console.warn("Firebase erro ao deletar:", err);
+    });
+}
+
+// ── SYNC EM TEMPO REAL ──────────────────────────────────────
+// Escuta a formação ativa na nuvem e atualiza todos os clientes
+let syncAtivo = false;
+let syncRef = null;
+
+function ativarSync(nome){
+  if(syncRef) syncRef.off(); // remove listener anterior
+
+  syncRef = firebase.database().ref("ao_vivo/" + nome);
+  syncRef.on("value", snapshot => {
+    const data = snapshot.val();
+    if(!data || !syncAtivo) return;
+    aplicarEscalacao(Array.isArray(data) ? data : Object.values(data));
+  });
+}
+
+function salvarAoVivo(){
+  const nome = document.getElementById("nomeFormacao").value.trim() || "partida";
+  const data = coletarEscalacao();
+  firebase.database().ref("ao_vivo/" + nome).set(data)
+    .then(() => mostrarToast("📡 Sincronizado ao vivo!"))
+    .catch(() => mostrarToast("⚠️ Falha no sync"));
+}
+
+// ── TOAST ───────────────────────────────────────────────────
+function mostrarToast(msg){
+  let toast = document.getElementById("fb-toast");
+  if(!toast){
+    toast = document.createElement("div");
+    toast.id = "fb-toast";
+    Object.assign(toast.style, {
+      position: "fixed", bottom: "24px", right: "24px",
+      background: "#1a1f1a", border: "1px solid var(--gold-dim)",
+      color: "var(--gold)", fontFamily: "'Share Tech Mono', monospace",
+      fontSize: "13px", padding: "10px 18px", borderRadius: "4px",
+      zIndex: "99999", letterSpacing: "1px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.6)",
+      transition: "opacity 0.3s"
+    });
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = "1";
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = "0"; }, 3000);
+}
+
+window.addEventListener("load", () => {
+  document.querySelectorAll(".squad").forEach((card, i) => {
+    setTimeout(() => { card.classList.add("spawn"); }, i * 80);
+  });
+
+  document.body.style.opacity = 0;
+  document.body.style.transition = "opacity 1s ease";
+  setTimeout(() => { document.body.style.opacity = 1; }, 100);
+
+  restaurarBackup();
+  atualizarPool();
+  refreshSelects();
+  observarSquads();
+  atualizarListaFormacoes();
+  atualizarTodosContadores();
+  atualizarResumo();
+});
+
+function atualizarPool(){
+  const pool = document.getElementById("pool");
+  pool.innerHTML = "";
+  const busca = document.getElementById("searchPlayer")?.value?.toLowerCase() || "";
+
+  players.forEach(p => {
+    if(usados.has(p)) return;
+    if(!p.toLowerCase().includes(busca)) return;
+
+    const li = document.createElement("li");
+    li.textContent = p;
+    li.className = "draggable";
+    li.draggable = true;
+    li.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", p); });
+    pool.appendChild(li);
+  });
+}
+
+function filtrarJogadores(){ atualizarPool(); }
+
+function escolherFuncao(card, name, insertBeforeEl = null){
+  const ul = card.querySelector("ul");
+  if([...ul.children].some(li => li.dataset.player === name)) return;
+
+  const li = document.createElement("li");
+  li.dataset.player = name;
+  li.draggable = true;
+  li.style.flexDirection = "row";
+  li.style.alignItems = "center";
+
+  li.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("text/plain", name);
+    li.classList.add("dragging");
+  });
+  li.addEventListener("dragend", () => { li.classList.remove("dragging"); });
+
+  const nameWrapper = document.createElement("span");
+  nameWrapper.style.display = "flex";
+  nameWrapper.style.alignItems = "center";
+  nameWrapper.style.gap = "6px";
+  nameWrapper.style.flex = "1";
+
+  const span = document.createElement("span");
+  span.textContent = name;
+
+  const role = document.createElement("span");
+  role.className = "role";
+
+  nameWrapper.appendChild(span);
+  nameWrapper.appendChild(criarMarcadorPresenca());
+  nameWrapper.appendChild(role);
+
+  const controls = document.createElement("span");
+  controls.style.display = "flex";
+  controls.style.alignItems = "center";
+  controls.style.gap = "4px";
+  controls.style.flexShrink = "0";
+
+  const select = document.createElement("select");
+  select.innerHTML = `
+    <option value="">Função</option>
+    <option value="Comando">Comando</option>
+    <option value="SL">SL</option>
+    <option value="SL2">SL2</option>
+    <option value="SL3">SL3</option>
+    <option value="MG">MG</option>
+    <option value="Eng">Eng</option>
+    <option value="AT">AT</option>
+    <option value="SUP">SUP</option>
+    <option value="Fuzil">Fuzil</option>
+    <option value="Artilheiro">Artilheiro</option>
+    <option value="TC">TC</option>
+    <option value="Gunner">Gunner</option>
+    <option value="Pilot">Pilot</option>
+    <option value="L1">L1</option>
+    <option value="L2">L2</option>
+    <option value="L3">L3</option>
+    <option value="L4">L4</option>
+  `;
+
+  select.onchange = () => {
+    if(!select.value) return;
+    role.textContent = select.value;
+    role.setAttribute("data-role", select.value);
+    select.style.display = "none";
+    atualizarResumo();
+  };
+
+  const btn = document.createElement("button");
+  btn.className = "remove";
+  btn.textContent = "✖";
+  btn.onclick = () => removerDoSquad(btn, name);
+
+  controls.appendChild(select);
+  controls.appendChild(btn);
+  li.appendChild(nameWrapper);
+  li.appendChild(controls);
+
+  if (insertBeforeEl && ul.contains(insertBeforeEl)) ul.insertBefore(li, insertBeforeEl);
+  else ul.appendChild(li);
+
+  usados.add(name);
+  atualizarPool();
+  atualizarResumo();
+}
+
+function mostrarEscolhaFuncao(card, name){
+  const ul = card.querySelector("ul");
+  if([...ul.children].some(li => li.dataset.player === name)) return;
+
+  const li = document.createElement("li");
+  li.dataset.player = name;
+
+  const select = document.createElement("select");
+  select.innerHTML = `
+    <option value="">Função</option>
+    <option value="Comando">Comando</option>
+    <option value="SL">SL</option>
+    <option value="SL2">SL2</option>
+    <option value="SL3">SL3</option>
+    <option value="MG">MG</option>
+    <option value="Eng">Eng</option>
+    <option value="AT">AT</option>
+    <option value="SUP">SUP</option>
+    <option value="Fuzil">Fuzil</option>
+    <option value="Artilheiro">Artilheiro</option>
+    <option value="TC">TC</option>
+    <option value="Gunner">Gunner</option>
+    <option value="Pilot">Pilot</option>
+    <option value="L1">L1</option>
+    <option value="L2">L2</option>
+    <option value="L3">L3</option>
+    <option value="L4">L4</option>
+  `;
+
+  select.onchange = () => {
+    if(!select.value) return;
+
+    li.innerHTML = "";
+
+    const nw = document.createElement("span");
+    nw.style.display = "flex";
+    nw.style.alignItems = "center";
+    nw.style.gap = "6px";
+    nw.style.flex = "1";
+
+    const ns = document.createElement("span");
+    ns.textContent = name;
+
+    const re = document.createElement("span");
+    re.className = "role";
+    re.setAttribute("data-role", select.value);
+    re.textContent = select.value;
+
+    nw.appendChild(ns);
+    nw.appendChild(criarMarcadorPresenca());
+    nw.appendChild(re);
+
+    const rb = document.createElement("button");
+    rb.className = "remove";
+    rb.textContent = "✖";
+    rb.onclick = () => removerDoSquad(rb, name);
+
+    li.appendChild(nw);
+    li.appendChild(rb);
+
+    atualizarPool();
+  };
+
+  li.appendChild(select);
+  ul.appendChild(li);
+}
+
+function removerDoSquad(btn, name){
+  const li = btn.closest("li");
+  li.remove();
+  usados.delete(name);
+  atualizarPool();
+  atualizarTodosContadores();
+  atualizarResumo();
+}
+
+function addSquad(){
+  const input = document.getElementById("newSquadName");
+  let name = input.value.trim();
+  const fileInput = document.getElementById("squadImageInput");
+  const file = fileInput.files[0];
+
+  if(!name && !file){ alert("Coloca pelo menos uma imagem ou nome"); return; }
+
+  const board = document.getElementById("board");
+  const card = document.createElement("div");
+  card.className = "card squad";
+
+  const header = document.createElement("div");
+  header.className = "squad-header";
+
+  if(file){
+    const img = document.createElement("img");
+    img.className = "squad-icon";
+    img.src = URL.createObjectURL(file);
+    header.appendChild(img);
+  }
+
+  if(name){
+    const title = document.createElement("span");
+    title.className = "squad-title";
+    title.textContent = name.toUpperCase();
+    header.appendChild(title);
+  }
+
+  const count = document.createElement("span");
+  count.className = "squad-count";
+  count.textContent = "0";
+  header.appendChild(count);
+
+  const del = document.createElement("button");
+  del.className = "remove";
+  del.textContent = "✖";
+  del.onclick = () => { removerJogadoresDaSquad(card); card.remove(); };
+  header.appendChild(del);
+
+  card.appendChild(header);
+  card.classList.add("draggable-squad");
+  board.appendChild(card);
+  card.style.position = "absolute";
+  card.style.left = "200px";
+  card.style.top = "200px";
+
+  refreshSelects();
+  makeDraggable(card);
+
+  setTimeout(() => {
+    card.classList.add("spawn");
+    setTimeout(() => { card.classList.remove("spawn"); }, 500);
+  }, 10);
+
+  card.addEventListener("dragover", e => { e.preventDefault(); card.classList.add("drag-over"); });
+  card.addEventListener("dragleave", () => { card.classList.remove("drag-over"); });
+
+  setTimeout(() => { card.classList.add("spawn"); refreshSelects(); }, 0);
+
+  input.value = "";
+  fileInput.value = "";
+}
+
+function salvarFormacao(){
+  const nome = document.getElementById("nomeFormacao").value.trim();
+  if(!nome) return alert("Coloca um nome pra formação");
+
+  const data = [];
+  document.querySelectorAll(".squad").forEach(card => {
+    const titulo = card.querySelector(".squad-title")?.innerText || card.querySelector("h2")?.innerText || "Sem nome";
+    const jogadores = [];
+    card.querySelectorAll("li").forEach(li => {
+      jogadores.push({ name: li.dataset.player, role: li.querySelector(".role")?.innerText || "" });
+    });
+    data.push({ titulo, jogadores });
+  });
+
+  localStorage.setItem("formacao_" + nome, JSON.stringify(data));
+  atualizarListaFormacoes();
+  backupAutomatico();
+}
+
+function backupAutomatico(){
+  const dados = {};
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key.startsWith("formacao_")) dados[key] = localStorage.getItem(key);
+  }
+  localStorage.setItem("backup_geral", JSON.stringify(dados));
+}
+
+function atualizarListaFormacoes(){
+  const select = document.getElementById("listaFormacoes");
+  select.innerHTML = "";
+  Object.keys(localStorage).forEach(key => {
+    if(key.startsWith("formacao_")){
+      const nome = key.replace("formacao_", "");
+      const opt = document.createElement("option");
+      opt.value = nome;
+      opt.textContent = nome;
+      select.appendChild(opt);
+    }
+  });
+}
+
+function carregarFormacao(){
+  const nome = document.getElementById("listaFormacoes").value;
+  if(!nome) return;
+
+  const data = JSON.parse(localStorage.getItem("formacao_" + nome));
+  if(!data) return;
+
+  document.querySelectorAll(".squad ul").forEach(ul => ul.innerHTML = "");
+  usados.clear();
+
+  data.forEach(squadData => {
+    const card = [...document.querySelectorAll(".squad")]
+      .find(c =>
+        (c.querySelector(".squad-title")?.innerText || c.querySelector("h2")?.innerText) === squadData.titulo
+      );
+    if(!card) return;
+    squadData.jogadores.forEach(j => { addPlayerDireto(card, j.name, j.role); });
+    atualizarTodosContadores();
+  });
+
+  atualizarPool();
+  atualizarResumo();
+  refreshSelects();
+}
+
+function deletarFormacao(){
+  const nome = document.getElementById("listaFormacoes").value;
+  if(!nome) return;
+  localStorage.removeItem("formacao_" + nome);
+  atualizarListaFormacoes();
+}
+
+function removerJogadoresDaSquad(card){
+  card.querySelectorAll("li").forEach(li => {
+    const name = li.dataset.player;
+    if(name) usados.delete(name);
+  });
+  atualizarPool();
+}
+
+function makeDraggable(el){
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+  const parent = el.parentElement;
+
+  const guideX = document.createElement("div");
+  guideX.className = "snap-guide vertical";
+  guideX.style.display = "none";
+
+  const guideY = document.createElement("div");
+  guideY.className = "snap-guide horizontal";
+  guideY.style.display = "none";
+
+  parent.appendChild(guideX);
+  parent.appendChild(guideY);
+
+  el.style.position = "absolute";
+  el.style.cursor = "grab";
+
+  el.addEventListener("mousedown", (e) => {
+    if(e.target.tagName === "BUTTON" || e.target.tagName === "SELECT") return;
+
+    const rect = el.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    isDragging = true;
+    el.style.cursor = "grabbing";
+    el.style.zIndex = 9999;
+
+    function onMove(ev){
+      if(!isDragging) return;
+      const parentRect = parent.getBoundingClientRect();
+
+      let x = ev.clientX - parentRect.left - offsetX;
+      let y = ev.clientY - parentRect.top - offsetY;
+      x = Math.round(x / GRID_SIZE) * GRID_SIZE;
+      y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+
+      let snappedX = false;
+      let snappedY = false;
+
+      document.querySelectorAll(".draggable-squad").forEach(s => s.classList.remove("snap-target"));
+
+      document.querySelectorAll(".squad").forEach(other => {
+        if(other === el) return;
+
+        const r1 = { left: x, top: y, right: x + el.offsetWidth, bottom: y + el.offsetHeight };
+        const r2 = other.getBoundingClientRect();
+        const parentRect = parent.getBoundingClientRect();
+        const otherRect = {
+          left: r2.left - parentRect.left, top: r2.top - parentRect.top,
+          right: r2.right - parentRect.left, bottom: r2.bottom - parentRect.top
+        };
+
+        if(Math.abs(r1.right - otherRect.left) < SNAP_DISTANCE){
+          x = otherRect.left - el.offsetWidth; snappedX = true;
+          guideX.style.left = otherRect.left + "px"; guideX.style.display = "block";
+          other.classList.add("snap-target");
+        }
+        if(Math.abs(r1.left - otherRect.right) < SNAP_DISTANCE){
+          x = otherRect.right; snappedX = true;
+          guideX.style.left = otherRect.right + "px"; guideX.style.display = "block";
+          other.classList.add("snap-target");
+        }
+        if(Math.abs(r1.bottom - otherRect.top) < SNAP_DISTANCE){
+          y = otherRect.top - el.offsetHeight; snappedY = true;
+          guideY.style.top = otherRect.top + "px"; guideY.style.display = "block";
+          other.classList.add("snap-target");
+        }
+        if(Math.abs(r1.top - otherRect.bottom) < SNAP_DISTANCE){
+          y = otherRect.bottom; snappedY = true;
+          guideY.style.top = otherRect.bottom + "px"; guideY.style.display = "block";
+          other.classList.add("snap-target");
+        }
+      });
+
+      if(!snappedX) guideX.style.display = "none";
+      if(!snappedY) guideY.style.display = "none";
+
+      el.style.left = x + "px";
+      el.style.top  = y + "px";
+    }
+
+    function onUp(){
+      if(!isDragging) return;
+      isDragging = false;
+      el.style.cursor = "grab";
+      el.style.zIndex = 10;
+      guideX.style.display = "none";
+      guideY.style.display = "none";
+      document.querySelectorAll(".draggable-squad").forEach(s => s.classList.remove("snap-target"));
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    }
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  });
+}
+
+function removerColuna(card){
+  card.querySelectorAll("li").forEach(li => {
+    const name = li.dataset.player;
+    if(name) usados.delete(name);
+  });
+  atualizarPool();
+  card.remove();
+}
+
+function renderLineup(){
+  const container = document.getElementById("lineup");
+  container.innerHTML = "";
+
+  Object.keys(lineupFixo).forEach(squad => {
+    const div = document.createElement("div");
+    div.className = "lineup-squad";
+
+    const title = document.createElement("h3");
+    title.textContent = squad;
+    div.appendChild(title);
+
+    lineupFixo[squad].forEach(player => {
+      const p = document.createElement("div");
+      p.textContent = player;
+      p.className = "lineup-player";
+      p.draggable = true;
+      p.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", player); });
+      div.appendChild(p);
+    });
+
+    container.appendChild(div);
+  });
+}
+
+function carregarBackupJSON(input){
+  const file = input.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const dados = JSON.parse(e.target.result);
+      Object.keys(dados).forEach(key => { localStorage.setItem(key, dados[key]); });
+      atualizarListaFormacoes();
+      alert("Backup carregado! Selecione a formação e clique em Carregar.");
+    } catch(err) {
+      alert("Arquivo inválido.");
+    }
+  };
+  reader.readAsText(file);
+  input.value = "";
+}
+
+const lineupFixo = {
+  "Comando": [],
+  "Infantaria": [],
+  "Helicoptero": ["ャ Salty666","ャ TankNightmare"],
+  "Logística": [],
+  "Blindados": ["ャ Herr"],
+};
+
+renderLineup();
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNf9DbdFEQYlKXgaxE6_r0KChBPkmTOOk",
+    authDomain: "caveiras-40f6f.firebaseapp.com",
+    projectId: "caveiras-40f6f",
+    storageBucket: "caveiras-40f6f.firebasestorage.app",
+    messagingSenderId: "251365551770",
+    appId: "1:251365551770:web:364925bb2ae49a8219f923",
+    databaseURL: "https://caveiras-40f6f-default-rtdb.firebaseio.com"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+</body>
+</html>
